@@ -178,7 +178,7 @@ sub feature_setup
   my $file;
   
   open($file, ">" . $conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf");
-  #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;}
+  #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
   my $conf = <<CONFIG;
   server {
     listen $d->{'ip'}:80;
