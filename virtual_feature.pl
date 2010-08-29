@@ -189,6 +189,10 @@ sub feature_setup
     listen $d->{'ip'}:80;
     server_name www.$d->{'dom'};
     
+    if (!-e \$request_filename) {
+      rewrite ^/(.*)\$ /index.php?q=\$1 last;
+    }
+    
     # serve static files directly
     location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico)\$ {
       access_log        off;
