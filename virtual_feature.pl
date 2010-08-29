@@ -189,6 +189,12 @@ sub feature_setup
     listen $d->{'ip'}:80;
     server_name www.$d->{'dom'};
     
+    access_log /var/log/nginx/$d->{'dom'}.access.log;
+    error_log /var/log/nginx/$d->{'dom'}.ru.error.log;
+  
+    root $d->{'home'}/public_html/;
+    index index.php index.html index.htm;
+    
     if (!-e \$request_filename) {
       rewrite ^/(.*)\$ /index.php?q=\$1 last;
     }
