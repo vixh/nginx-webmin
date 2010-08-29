@@ -1,2 +1,3 @@
-root=Path to Nginx Root,0
-vhost_path=Path to Vhost config directory,0
+conf_dir=Nginx config directory(default: /etc/nginx/),0
+sites_avaliable_dir=Nginx sites-available subdirectory(default: sites-available/),0
+sites_enabled_dir=Nginx sites-enabled subdirectory(default: sites-enabled/),0

@@ -1,6 +1,24 @@
 do 'virtualmin-nginx-lib.pl';
 
 use File::Copy;
+our ($conf_dir, $sites_avaliable_dir, $sites_enabled_dir);
+
+#TODO if $conf_dir, $sites_avaliable_dir, $sites_enabled_dir come from user put trail slash
+
+if($config{'conf_dir'} eq "")
+{
+  $conf_dir = '/etc/nginx/';
+}
+
+if($config{'sites_avaliable_dir'} eq "")
+{
+  $sites_avaliable_dir = 'sites-avaliable/';
+}
+
+if($config{'sites_enabled_dir'} eq "")
+{
+  $sites_enabled_dir = 'sites-enabled/';
+}
 
 sub feature_always_links
 {
@@ -19,65 +37,49 @@ sub feature_bandwidth
 
 sub feature_check
 {
+  my $conf_file = $conf_dir . "nginx.conf";
   
-  if($config{'root'} eq "")
-  {
-    return "Nginx module needs a root path to your Nginx installation";
-  }
-  
-  unless(-r $config{'root'} . "/sbin/nginx")
+  unless(-r $conf_file)
   {
     return "Nginx needs to be installed.";
   }
   
-  if($config{'vhost_path'} eq "")
+  unless (-d $conf_dir . $sites_avaliable_dir)
   {
-    return "Nginx module needs a path to your vhost config directory. This directory is usually under the nginx conf path and included in the main nginx conf file.";
+    mkdir($conf_dir . $sites_avaliable_dir);
   }
   
-  unless (-d $config{'root'} . "/conf/" . $config{'vhost_path'})
+  unless (-d $conf_dir . $sites_enabled_dir)
   {
-    mkdir($config{'root'} . "/conf/" . $config{'vhost_path'});
+    mkdir($conf_dir . $sites_enabled_dir);
   }
+
   
-  unless (-d $config{'root'} . "/conf/" . $config{'vhost_path'} . "/enabled")
-  {
-    mkdir($config{'root'} . "/conf/" . $config{'vhost_path'}. "/enabled");
-  }
-  
-  unless (-d $config{'root'} . "/conf/" . $config{'vhost_path'} . "/disabled")
-  {
-    mkdir($config{'root'} . "/conf/" . $config{'vhost_path'}. "/disabled");
-  }
-  
-  open(CONF, $config{'root'} . "/conf/nginx.conf");
+  open(CONF, $conf_file);
   
   local $/ = undef;
   my $filestring = <CONF>;
   close(CONF);
   
-  my $pattern = "include " . $config{'vhost_path'} . "\\/enabled\\/\\*.conf;";
+  #TODO: check if include directive not comment "# include /etc/nginx/sites-enabled/*;"
+  my $pattern = "include " . $conf_dir . $sites_enabled_dir . "\\*;";
   
-  #print $pattern;
-  
-  #print $filestring;
-  
-    unless ($filestring =~ /$pattern/) 
-    {
-      
-      chop($filestring);
-      
-      $filestring .= "\tinclude " . $config{'vhost_path'} . "/enabled/*.conf;\n}"; 
-      
-      open(CONF,  ">", $config{'root'} . "/conf/nginx.conf");
-      
-      print(CONF $filestring);
-      
-      close(CONF);
-      
-    }
+  unless ($filestring =~ /$pattern/) 
+  {
     
-    return undef;
+    chop($filestring);
+    
+    $filestring .= "\tinclude " . $conf_dir . $sites_enabled_dir . "*;\n}"; 
+    
+    open(CONF,  ">", $conf_file);
+    
+    print(CONF $filestring);
+    
+    close(CONF);
+    
+  }
+    
+  return undef;
   
 }
 
@@ -91,7 +93,8 @@ sub feature_delete
   my ($d) = @_;
   &$virtual_server::first_print("Deleting Nginx site ..");
   
-  unlink($config{'root'} . "/conf/" . $config{'vhost_path'} . "/enabled/" . $d->{'dom'} . ".conf");
+  unlink($conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
+  unlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf");
   
   &$virtual_server::second_print(".. done");
   
@@ -106,7 +109,7 @@ sub feature_disable
 {
   my ($d) = @_;
   &$virtual_server::first_print("Disabling Nginx website ..");
-  move($config{'root'} . "/conf/" . $config{'vhost_path'} . "/enabled/" . $d->{'dom'} . ".conf", $config{'root'} . "/conf/" . $config{'vhost_path'} . "/disabled/" . $d->{'dom'} . ".conf" );
+  unlink($conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   &$virtual_server::second_print(".. done");
 }
 
@@ -120,7 +123,7 @@ sub feature_enable
   
   my ($d) = @_;
   &$virtual_server::first_print("Re-enabling Nginx website ..");
-  move($config{'root'} . "/conf/" . $config{'vhost_path'} . "/disabled/" . $d->{'dom'} . ".conf", $config{'root'} . "/conf/" . $config{'vhost_path'} . "/enabled/" . $d->{'dom'} . ".conf" );
+  symlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   &$virtual_server::second_print(".. done");
   
   
@@ -170,24 +173,45 @@ sub feature_setup
   
   my $file;
   
-  open($file, ">" . $config{'root'} . "/conf/" . $config{'vhost_path'} . "/enabled/" . $d->{'dom'} . ".conf");
+  open($file, ">" . $conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf");
   my $conf = <<CONFIG;
   server {
     listen $d->{'ip'}:80;
-    server_name $d->{'dom'} www.$d->{'dom'};
+    server_name  $d->{'dom'};
+    rewrite ^/(.*) http://www.$d->{'dom'} permanent;
+  }
+  server {
+    listen $d->{'ip'}:80;
+    server_name www.$d->{'dom'};
+    
+    # serve static files directly
+    location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico)\$ {
+      access_log        off;
+      expires           30d;
+    }
     
     location / {
       
       root $d->{'home'}/public_html;
-      index index.html index.htm;
+      index index.php index.html index.htm;
       
     }
+    
+    location ~ \.php\$ {
+      fastcgi_pass 127.0.0.1:9000;
+      fastcgi_index index.php;
+      fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+      include fastcgi_params;
+    }
+
   }
 CONFIG
   
   print($file $conf);
   
   close $file;
+  
+  symlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   
   &$virtual_server::second_print(".. done");
   
