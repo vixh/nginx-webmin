@@ -1,3 +1,4 @@
-conf_dir=Nginx config directory(default: /etc/nginx/),0
-sites_avaliable_dir=Nginx sites-available subdirectory(default: sites-available/),0
-sites_enabled_dir=Nginx sites-enabled subdirectory(default: sites-enabled/),0
+conf_dir=Config directory,3,Default (/etc/nginx/)
+sites_avaliable_dir=sites-available subdirectory,0,Default (sites-available/)
+sites_enabled_dir=Nginx sites-enabled subdirectory,0,Default (sites-enabled/)
+nginx_pid=pid file,0,Default (/var/run/nginx.pid)

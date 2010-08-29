@@ -20,6 +20,8 @@ if($config{'sites_enabled_dir'} eq "")
   $sites_enabled_dir = 'sites-enabled/';
 }
 
+
+
 sub feature_always_links
 {
   
@@ -110,6 +112,7 @@ sub feature_disable
   my ($d) = @_;
   &$virtual_server::first_print("Disabling Nginx website ..");
   unlink($conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
+  reload_nginx();
   &$virtual_server::second_print(".. done");
 }
 
@@ -124,6 +127,7 @@ sub feature_enable
   my ($d) = @_;
   &$virtual_server::first_print("Re-enabling Nginx website ..");
   symlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
+  reload_nginx();
   &$virtual_server::second_print(".. done");
   
   
@@ -174,6 +178,7 @@ sub feature_setup
   my $file;
   
   open($file, ">" . $conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf");
+  #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;}
   my $conf = <<CONFIG;
   server {
     listen $d->{'ip'}:80;
@@ -190,12 +195,12 @@ sub feature_setup
       expires           30d;
     }
     
-    location / {
+    #location / {
       
-      root $d->{'home'}/public_html;
-      index index.php index.html index.htm;
+      #root $d->{'home'}/public_html;
+      #index index.php index.html index.htm;
       
-    }
+    #}
     
     location ~ \.php\$ {
       fastcgi_pass 127.0.0.1:9000;
@@ -212,6 +217,8 @@ CONFIG
   close $file;
   
   symlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
+  
+  reload_nginx();
   
   &$virtual_server::second_print(".. done");
   
@@ -230,4 +237,14 @@ sub feature_validate
 sub feature_webmin
 {
   
+}
+
+sub reload_nginx
+{
+  if($config{'nginx_pid'} eq "")
+  {
+    $nginx_pid = '/var/run/nginx.pid';
+  }
+  my $pid = `cat $nginx_pid`;
+  `kill -HUP $pid`;
 }
