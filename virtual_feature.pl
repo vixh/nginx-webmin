@@ -10,9 +10,9 @@ if($config{'conf_dir'} eq "")
   $conf_dir = '/etc/nginx/';
 }
 
-if($config{'sites_avaliable_dir'} eq "")
+if($config{'sites_available_dir'} eq "")
 {
-  $sites_avaliable_dir = 'sites-avaliable/';
+  $sites_available_dir = 'sites-available/';
 }
 
 if($config{'sites_enabled_dir'} eq "")
@@ -46,9 +46,9 @@ sub feature_check
     return "Nginx needs to be installed.";
   }
   
-  unless (-d $conf_dir . $sites_avaliable_dir)
+  unless (-d $conf_dir . $sites_available_dir)
   {
-    mkdir($conf_dir . $sites_avaliable_dir);
+    mkdir($conf_dir . $sites_available_dir);
   }
   
   unless (-d $conf_dir . $sites_enabled_dir)
@@ -96,7 +96,7 @@ sub feature_delete
   &$virtual_server::first_print("Deleting Nginx site ..");
   
   unlink($conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
-  unlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf");
+  unlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
   
   &$virtual_server::second_print(".. done");
   
@@ -126,7 +126,7 @@ sub feature_enable
   
   my ($d) = @_;
   &$virtual_server::first_print("Re-enabling Nginx website ..");
-  symlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
+  symlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   reload_nginx();
   &$virtual_server::second_print(".. done");
   
@@ -177,7 +177,7 @@ sub feature_setup
   
   my $file;
   
-  open($file, ">" . $conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf");
+  open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
   my $conf = <<CONFIG;
   server {
@@ -220,7 +220,7 @@ CONFIG
   
   close $file;
   
-  symlink($conf_dir . $sites_avaliable_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
+  symlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   
   reload_nginx();
   
