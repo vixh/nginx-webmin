@@ -1,7 +1,7 @@
 do 'virtualmin-nginx-lib.pl';
 
 use File::Copy;
-our ($conf_dir, $sites_avaliable_dir, $sites_enabled_dir);
+our ($conf_dir, $sites_avaliable_dir, $sites_enabled_dir, $log_dir);
 
 #TODO if $conf_dir, $sites_avaliable_dir, $sites_enabled_dir come from user put trail slash
 
@@ -20,7 +20,10 @@ if($config{'sites_enabled_dir'} eq "")
   $sites_enabled_dir = 'sites-enabled/';
 }
 
-
+if($config{'log_dir'} eq "")
+{
+  $log_dir = '/var/log/nginx/';
+}
 
 sub feature_always_links
 {
@@ -189,8 +192,8 @@ sub feature_setup
     listen $d->{'ip'}:80;
     server_name www.$d->{'dom'};
     
-    access_log /var/log/nginx/$d->{'dom'}.access.log;
-    error_log /var/log/nginx/$d->{'dom'}.ru.error.log;
+    access_log $log_dir$d->{'dom'}.access.log;
+    error_log $log_dir$d->{'dom'}.error.log;
   
     root $d->{'home'}/public_html/;
     index index.php index.html index.htm;
@@ -255,6 +258,7 @@ sub reload_nginx
   {
     $nginx_pid = '/var/run/nginx.pid';
   }
+  #TODO test nginx conf = nginx -t
   my $pid = `cat $nginx_pid`;
   `kill -HUP $pid`;
 }
