@@ -22,7 +22,8 @@ if($config{'sites_enabled_dir'} eq "")
 
 if($config{'log_dir'} eq "")
 {
-  $log_dir = '/var/log/nginx/';
+    my ($d) = @_;
+  $log_dir = "$d->{'home'}/logs/";
 }
 
 sub feature_always_links
@@ -182,6 +183,7 @@ sub feature_setup
   
   open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
+  #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
   my $conf = <<CONFIG;
   server {
     listen $d->{'ip'}:80;
@@ -208,13 +210,6 @@ sub feature_setup
       expires           30d;
     }
     
-    #location / {
-      
-      #root $d->{'home'}/public_html;
-      #index index.php index.html index.htm;
-      
-    #}
-    
     location ~ \.php\$ {
       fastcgi_pass 127.0.0.1:9000;
       fastcgi_index index.php;
@@ -232,6 +227,7 @@ CONFIG
   symlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   
   reload_nginx();
+  fix_perm();
   
   &$virtual_server::second_print(".. done");
   
@@ -261,4 +257,15 @@ sub reload_nginx
   #TODO test nginx conf = nginx -t
   my $pid = `cat $nginx_pid`;
   `kill -HUP $pid`;
+}
+
+sub fix_perm
+{
+    # TODO nginx run as www-data, default perm on public_html in Virtualmin 0740 Sequrity alert if chmod 0755
+    my ($d) = @_;
+    if($config{'public_html_perm'} eq "")
+    {
+        $public_html_perm = '0755';
+    }
+    chmod $public_html_perm, "$d->{'home'}/public_html/";
 }
