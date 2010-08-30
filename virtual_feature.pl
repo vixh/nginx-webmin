@@ -4,6 +4,7 @@ use File::Copy;
 our ($conf_dir, $sites_avaliable_dir, $sites_enabled_dir, $log_dir);
 
 #TODO if $conf_dir, $sites_avaliable_dir, $sites_enabled_dir come from user put trail slash
+#TODO Config set by user not working, only default values
 
 if($config{'conf_dir'} eq "")
 {
@@ -20,11 +21,7 @@ if($config{'sites_enabled_dir'} eq "")
   $sites_enabled_dir = 'sites-enabled/';
 }
 
-if($config{'log_dir'} eq "")
-{
-    my ($d) = @_;
-  $log_dir = "$d->{'home'}/logs/";
-}
+
 
 sub feature_always_links
 {
@@ -180,6 +177,11 @@ sub feature_setup
   &$virtual_server::first_print("Setting up Nginx site ..");
   
   my $file;
+  
+  if($config{'log_dir'} eq "")
+  {
+    $log_dir = "$d->{'home'}/logs/";
+  }
   
   open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
