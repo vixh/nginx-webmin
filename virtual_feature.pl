@@ -185,14 +185,14 @@ sub feature_setup
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
   #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
   my $conf = <<CONFIG;
+  #server {
+  #  listen $d->{'ip'}:80;
+  #  server_name  $d->{'dom'};
+  #  rewrite ^/(.*) http://www.$d->{'dom'} permanent;
+  #}
   server {
     listen $d->{'ip'}:80;
-    server_name  $d->{'dom'};
-    rewrite ^/(.*) http://www.$d->{'dom'} permanent;
-  }
-  server {
-    listen $d->{'ip'}:80;
-    server_name www.$d->{'dom'};
+    server_name $d->{'dom'} www.$d->{'dom'};
     
     access_log $log_dir$d->{'dom'}.access.log;
     error_log $log_dir$d->{'dom'}.error.log;
