@@ -227,7 +227,7 @@ CONFIG
   symlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf", $conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   
   reload_nginx();
-  fix_perm();
+  fix_perm("$d->{'home'}/public_html/");
   
   &$virtual_server::second_print(".. done");
   
@@ -262,10 +262,11 @@ sub reload_nginx
 sub fix_perm
 {
     # TODO nginx run as www-data, default perm on public_html in Virtualmin 0740 Sequrity alert if chmod 0755
-    my ($d) = @_;
+    my ($dir) = @_;
+    
     if($config{'public_html_perm'} eq "")
     {
         $public_html_perm = '0755';
     }
-    chmod $public_html_perm, "$d->{'home'}/public_html/";
+    chmod oct($public_html_perm), $dir;
 }
