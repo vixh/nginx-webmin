@@ -186,7 +186,7 @@ sub feature_setup
   open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
 
   $template = "";
-  open(TEMPLATE,"nginx_conf.tpl");
+  open(TEMPLATE,"nginx_conf.tpl") or die "template opening failed";
 
   while ($line = <TEMPLATE>){
     $template .= $line;
