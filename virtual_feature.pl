@@ -1,6 +1,8 @@
 do 'virtualmin-nginx-lib.pl';
 
+
 use File::Copy;
+use Cwd 'abs_path';
 our ($conf_dir, $sites_avaliable_dir, $sites_enabled_dir, $log_dir);
 
 #TODO if $conf_dir, $sites_avaliable_dir, $sites_enabled_dir come from user put trail slash
@@ -98,7 +100,7 @@ sub feature_delete
   
   unlink($conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   unlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
-  
+
   &$virtual_server::second_print(".. done");
   
 }
@@ -184,43 +186,24 @@ sub feature_setup
   }
   
   open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
-  #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
-  #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
-  my $conf = <<CONFIG;
-  #server {
-  #  listen $d->{'ip'}:80;
-  #  server_name  $d->{'dom'};
-  #  rewrite ^/(.*) http://www.$d->{'dom'} permanent;
-  #}
-  server {
-    listen $d->{'ip'}:80;
-    server_name $d->{'dom'} www.$d->{'dom'};
-    
-    access_log $log_dir$d->{'dom'}.access.log;
-    error_log $log_dir$d->{'dom'}.error.log;
-  
-    root $d->{'home'}/public_html/;
-    index index.php index.html index.htm;
-    
-    if (!-e \$request_filename) {
-      rewrite ^/(.*)\$ /index.php?q=\$1 last;
-    }
-    
-    # serve static files directly
-    location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico)\$ {
-      access_log        off;
-      expires           30d;
-    }
-    
-    location ~ \.php\$ {
-      fastcgi_pass 127.0.0.1:9000;
-      fastcgi_index index.php;
-      fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-      include fastcgi_params;
-    }
 
+  $template = "";
+
+  $template_file = abs_path(__FILE__);
+  $template_file =~ s/virtual_feature.pl/nginx_conf.tpl/;
+
+  open(TEMPLATE,$template_file) or die "Template opening failed: check file ".$template_file;
+
+  while ($line = <TEMPLATE>){
+    $template .= $line;
   }
-CONFIG
+  close TEMPLATE;
+  $template =~ s/<domain>/$d->{'dom'}/g;
+  $template =~ s/<path>/$d->{'home'}/g;
+  $template =~ s/<ip>/$d->{'ip'}/g;
+  $template =~ s/<log_directory>/$log_dir/g;
+
+  $conf = $template;
   
   print($file $conf);
   
