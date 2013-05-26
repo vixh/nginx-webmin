@@ -187,11 +187,12 @@ sub feature_setup
 
 
   my $template;
-  open(TEMPLATE, "<", "nginx_conf.tpl");
+  $template = "";
+  open(TEMPLATE,"nginx_conf.tpl");
   @strings=<TEMPLATE>;
   foreach $line (@strings)
   {
-    $template = $template . $line;
+    $template .= $line;
   }
   close TEMPLATE;
 #  $template =~ s/<domain>/$d->{'dom'}/g;
