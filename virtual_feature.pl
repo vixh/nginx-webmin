@@ -201,6 +201,7 @@ sub feature_setup
   $template =~ s/<domain>/$d->{'dom'}/g;
   $template =~ s/<path>/$d->{'home'}/g;
   $template =~ s/<ip>/$d->{'ip'}/g;
+  $template =~ s/<log_directory>/$log_dir/g;
 
   $conf = $template;
   
