@@ -184,43 +184,58 @@ sub feature_setup
   }
   
   open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
+
+
+  my $template;
+  open(TEMPLATE, "<", "nginx_conf.tpl");
+  @strings=<TEMPLATE>;
+  foreach $line (@strings)
+  {
+    $template = $template . $line;
+  }
+  close TEMPLATE;
+  $template =~ s/\<domain\>/$d->{'dom'}/;
+  $template =~ s/\<path\>/$d->{'home'}/;
+  $template =~ s/\<ip\>/$d->{'ip'}/;
+
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
   #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
-  my $conf = <<CONFIG;
+  my $conf = $template;
+  #<<CONFIG;
   #server {
   #  listen $d->{'ip'}:80;
   #  server_name  $d->{'dom'};
   #  rewrite ^/(.*) http://www.$d->{'dom'} permanent;
   #}
-  server {
-    listen $d->{'ip'}:80;
-    server_name $d->{'dom'} www.$d->{'dom'};
-    
-    access_log $log_dir$d->{'dom'}.access.log;
-    error_log $log_dir$d->{'dom'}.error.log;
-  
-    root $d->{'home'}/public_html/;
-    index index.php index.html index.htm;
-    
-    if (!-e \$request_filename) {
-      rewrite ^/(.*)\$ /index.php?q=\$1 last;
-    }
-    
-    # serve static files directly
-    location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico)\$ {
-      access_log        off;
-      expires           30d;
-    }
-    
-    location ~ \.php\$ {
-      fastcgi_pass 127.0.0.1:9000;
-      fastcgi_index index.php;
-      fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-      include fastcgi_params;
-    }
-
-  }
-CONFIG
+  #server {
+  #  listen $d->{'ip'}:80;
+  #  server_name $d->{'dom'} www.$d->{'dom'};
+  #
+  #  access_log $log_dir$d->{'dom'}.access.log;
+#    error_log $log_dir$d->{'dom'}.error.log;
+#
+#    root $d->{'home'}/public_html/;
+#    index index.php index.html index.htm;
+#
+#    if (!-e \$request_filename) {
+#      rewrite ^/(.*)\$ /index.php?q=\$1 last;
+#    }
+#
+#    # serve static files directly
+#    location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico)\$ {
+#      access_log        off;
+#      expires           30d;
+#    }
+#
+#    location ~ \.php\$ {
+#      fastcgi_pass 127.0.0.1:9000;
+#      fastcgi_index index.php;
+#      fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+#      include fastcgi_params;
+#    }
+#
+#  }
+#CONFIG
   
   print($file $conf);
   
