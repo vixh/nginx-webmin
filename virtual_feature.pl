@@ -1,6 +1,8 @@
 do 'virtualmin-nginx-lib.pl';
 
+
 use File::Copy;
+use Cwd 'abs_path';
 our ($conf_dir, $sites_avaliable_dir, $sites_enabled_dir, $log_dir);
 
 #TODO if $conf_dir, $sites_avaliable_dir, $sites_enabled_dir come from user put trail slash
@@ -98,7 +100,7 @@ sub feature_delete
   
   unlink($conf_dir . $sites_enabled_dir . $d->{'dom'} . ".conf");
   unlink($conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
-  
+
   &$virtual_server::second_print(".. done");
   
 }
@@ -186,15 +188,20 @@ sub feature_setup
   open($file, ">" . $conf_dir . $sites_available_dir . $d->{'dom'} . ".conf");
 
   $template = "";
-  open(TEMPLATE,"nginx_conf.tpl") or die "template opening failed";
+
+  $template_file = abs_path(__FILE__);
+  $template_file =~ s/virtual_feature.pl/nginx_conf.tpl/;
+  print($template_file);
+
+  open(TEMPLATE,$template_file) or die "template opening failed";
 
   while ($line = <TEMPLATE>){
     $template .= $line;
   }
   close TEMPLATE;
-#  $template =~ s/<domain>/$d->{'dom'}/g;
-#  $template =~ s/<path>/$d->{'home'}/g;
-#  $template =~ s/<ip>/$d->{'ip'}/g;
+  $template =~ s/<domain>/$d->{'dom'}/g;
+  $template =~ s/<path>/$d->{'home'}/g;
+  $template =~ s/<ip>/$d->{'ip'}/g;
 
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
   #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
