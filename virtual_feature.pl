@@ -194,9 +194,9 @@ sub feature_setup
     $template = $template . $line;
   }
   close TEMPLATE;
-  $template =~ s/\<domain\>/$d->{'dom'}/;
-  $template =~ s/\<path\>/$d->{'home'}/;
-  $template =~ s/\<ip\>/$d->{'ip'}/;
+#  $template =~ s/<domain>/$d->{'dom'}/g;
+#  $template =~ s/<path>/$d->{'home'}/g;
+#  $template =~ s/<ip>/$d->{'ip'}/g;
 
   #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
   #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
