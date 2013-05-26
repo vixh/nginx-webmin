@@ -191,9 +191,8 @@ sub feature_setup
 
   $template_file = abs_path(__FILE__);
   $template_file =~ s/virtual_feature.pl/nginx_conf.tpl/;
-  print($template_file);
 
-  open(TEMPLATE,$template_file) or die "template opening failed";
+  open(TEMPLATE,$template_file) or die "Template opening failed: check file ".$template_file;
 
   while ($line = <TEMPLATE>){
     $template .= $line;
@@ -203,44 +202,7 @@ sub feature_setup
   $template =~ s/<path>/$d->{'home'}/g;
   $template =~ s/<ip>/$d->{'ip'}/g;
 
-  #TODO in config.info add nginx config template with default value conf_tmpl=nginx config template,9,server{ listen $d->{'ip'}:80;} or get it from nginx_conf.tpl and parse
-  #TODO Determine subdomain and dont put rewrite ^/(.*) http://www.$d->{'dom'} permanent;
   $conf = $template;
-  #<<CONFIG;
-  #server {
-  #  listen $d->{'ip'}:80;
-  #  server_name  $d->{'dom'};
-  #  rewrite ^/(.*) http://www.$d->{'dom'} permanent;
-  #}
-  #server {
-  #  listen $d->{'ip'}:80;
-  #  server_name $d->{'dom'} www.$d->{'dom'};
-  #
-  #  access_log $log_dir$d->{'dom'}.access.log;
-#    error_log $log_dir$d->{'dom'}.error.log;
-#
-#    root $d->{'home'}/public_html/;
-#    index index.php index.html index.htm;
-#
-#    if (!-e \$request_filename) {
-#      rewrite ^/(.*)\$ /index.php?q=\$1 last;
-#    }
-#
-#    # serve static files directly
-#    location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico)\$ {
-#      access_log        off;
-#      expires           30d;
-#    }
-#
-#    location ~ \.php\$ {
-#      fastcgi_pass 127.0.0.1:9000;
-#      fastcgi_index index.php;
-#      fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-#      include fastcgi_params;
-#    }
-#
-#  }
-#CONFIG
   
   print($file $conf);
   
